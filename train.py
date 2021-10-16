@@ -14,13 +14,13 @@ from pathlib import Path
 import hydra
 import numpy as np
 import torch
-from dm_env import specs
 
-import dmc
+import gym
 import utils
 from logger import Logger
 from replay_buffer import ReplayBufferStorage, make_replay_loader
 from video import TrainVideoRecorder, VideoRecorder
+from igibson.envs.behavior_reward_shaping_env import BehaviorRewardShapingEnv
 
 torch.backends.cudnn.benchmark = True
 
@@ -30,6 +30,11 @@ def make_agent(obs_spec, action_spec, cfg):
     cfg.action_shape = action_spec.shape
     return hydra.utils.instantiate(cfg)
 
+class DataSpec:
+    def __init__(self, shape, dtype, name):
+        self.shape = shape
+        self.dtype = dtype
+        self.name = name
 
 class Workspace:
     def __init__(self, cfg):
@@ -41,9 +46,10 @@ class Workspace:
         self.device = torch.device(cfg.device)
         self.setup()
 
-        self.agent = make_agent(self.train_env.observation_spec(),
-                                self.train_env.action_spec(),
-                                self.cfg.agent)
+        self.agent = make_agent(
+            DataSpec(self.train_env.observation_space['rgb'].shape, np.float32, 'rgb'),
+            DataSpec(self.train_env.action_space.shape, np.float32, 'action'),
+            self.cfg.agent)
         self.timer = utils.Timer()
         self._global_step = 0
         self._global_episode = 0
@@ -52,15 +58,22 @@ class Workspace:
         # create logger
         self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
         # create envs
-        self.train_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
-                                  self.cfg.action_repeat, self.cfg.seed)
-        self.eval_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
-                                 self.cfg.action_repeat, self.cfg.seed)
+        # self.train_env = gym.make("CartPole-v1")
+        # self.eval_env = gym.make("CartPole-v1")
+        env_config = "/home/michael/Repositories/drqv2/behavior_full_observability.yaml"
+        self.train_env =BehaviorRewardShapingEnv(env_config)
+        # self.train_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
+        #                           self.cfg.action_repeat, self.cfg.seed)
+        # self.eval_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
+        #                          self.cfg.action_repeat, self.cfg.seed)
         # create replay buffer
-        data_specs = (self.train_env.observation_spec(),
-                      self.train_env.action_spec(),
-                      specs.Array((1,), np.float32, 'reward'),
-                      specs.Array((1,), np.float32, 'discount'))
+
+        data_specs = (
+            DataSpec(self.train_env.observation_space['rgb'].shape, np.float32, 'rgb'),
+            DataSpec(self.train_env.observation_space.shape, np.float32, 'action'),
+            DataSpec([1], np.float32, 'reward'),
+            DataSpec([1], np.float32, 'discount'),
+        )
 
         self.replay_storage = ReplayBufferStorage(data_specs,
                                                   self.work_dir / 'buffer')

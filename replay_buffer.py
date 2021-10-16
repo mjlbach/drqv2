@@ -47,6 +47,7 @@ class ReplayBufferStorage:
 
     def add(self, time_step):
         for spec in self._data_specs:
+            import pdb; pdb.set_trace()
             value = time_step[spec.name]
             if np.isscalar(value):
                 value = np.full(spec.shape, value, spec.dtype)
