@@ -5,6 +5,7 @@
 import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
+from collections import deque
 import os
 os.environ['MKL_SERVICE_FORCE_INTEL'] = '1'
 os.environ['MUJOCO_GL'] = 'egl'
@@ -23,7 +24,6 @@ from video import TrainVideoRecorder, VideoRecorder
 from igibson.envs.behavior_reward_shaping_env import BehaviorRewardShapingEnv
 
 torch.backends.cudnn.benchmark = True
-
 
 def make_agent(obs_spec, action_spec, cfg):
     cfg.obs_shape = obs_spec.shape
@@ -58,7 +58,7 @@ class Workspace:
         # create logger
         self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
         # create envs
-        env_config = "/home/michael/Repositories/drqv2/behavior_full_observability.yaml"
+        env_config = "/sailhome/mjlbach/Repositories/drqv2/behavior_full_observability.yaml"
         self.train_env =BehaviorRewardShapingEnv(env_config, action_filter="mobile_manipulation")
         # self.eval_env =BehaviorRewardShapingEnv(env_config)
         # self.train_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
@@ -128,6 +128,7 @@ class Workspace:
             self.video_recorder.save(f'{self.global_frame}.mp4')
 
         with self.logger.log_and_dump_ctx(self.global_frame, ty='eval') as log:
+            import pdb; pdb.set_trace()
             log('episode_reward', total_reward / episode)
             log('episode_length', step * self.cfg.action_repeat / episode)
             log('episode', self.global_episode)
@@ -160,7 +161,7 @@ class Workspace:
                                                       ty='train') as log:
                         log('fps', episode_frame / elapsed_time)
                         log('total_time', total_time)
-                        log('episode_reward', episode_reward)
+                        log('episode_reward', episode_reward[0])
                         log('episode_length', episode_frame)
                         log('episode', self.global_episode)
                         log('buffer_size', len(self.replay_storage))
@@ -194,7 +195,7 @@ class Workspace:
                 self.logger.log_metrics(metrics, self.global_frame, ty='train')
 
             # take env step
-            time_step = self.train_env.step(action)
+            time_step, reward, done, _ = self.train_env.step(action)
             episode_reward += time_step['reward']
             self.replay_storage.add(time_step)
             self.train_video_recorder.record(time_step['rgb'])

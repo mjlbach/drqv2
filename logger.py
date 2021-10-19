@@ -93,16 +93,19 @@ class MetersGroup(object):
         self._csv_file.flush()
 
     def _format(self, key, value, ty):
-        if ty == 'int':
-            value = int(value)
-            return f'{key}: {value}'
-        elif ty == 'float':
-            return f'{key}: {value:.04f}'
-        elif ty == 'time':
-            value = str(datetime.timedelta(seconds=int(value)))
-            return f'{key}: {value}'
-        else:
-            raise f'invalid format type: {ty}'
+        try:
+            if ty == 'int':
+                value = int(value)
+                return f'{key}: {value}'
+            elif ty == 'float':
+                return f'{key}: {value:.04f}'
+            elif ty == 'time':
+                value = str(datetime.timedelta(seconds=int(value)))
+                return f'{key}: {value}'
+            else:
+                raise f'invalid format type: {ty}'
+        except:
+            import pdb; pdb.set_trace()
 
     def _dump_to_console(self, data, prefix):
         prefix = colored(prefix, 'yellow' if prefix == 'train' else 'green')
