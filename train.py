@@ -58,10 +58,9 @@ class Workspace:
         # create logger
         self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
         # create envs
-        # self.train_env = gym.make("CartPole-v1")
-        # self.eval_env = gym.make("CartPole-v1")
         env_config = "/home/michael/Repositories/drqv2/behavior_full_observability.yaml"
         self.train_env =BehaviorRewardShapingEnv(env_config)
+        # self.eval_env =BehaviorRewardShapingEnv(env_config)
         # self.train_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
         #                           self.cfg.action_repeat, self.cfg.seed)
         # self.eval_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
@@ -71,8 +70,8 @@ class Workspace:
         data_specs = (
             DataSpec(self.train_env.observation_space['rgb'].shape, np.uint8, 'rgb'),
             DataSpec(self.train_env.action_space.shape, np.float32, 'action'),
-            DataSpec([1], np.float32, 'reward'),
-            DataSpec([1], np.float32, 'discount'),
+            DataSpec((1,), np.float32, 'reward'),
+            DataSpec((1,), np.float32, 'discount'),
         )
 
         self.replay_storage = ReplayBufferStorage(data_specs,
@@ -115,9 +114,9 @@ class Workspace:
         while eval_until_episode(episode):
             time_step = self.eval_env.reset()
             self.video_recorder.init(self.eval_env, enabled=(episode == 0))
-            while not time_step.last():
+            while not time_step['islast']:
                 with torch.no_grad(), utils.eval_mode(self.agent):
-                    action = self.agent.act(time_step.observation,
+                    action = self.agent.act(time_step['rgb'],
                                             self.global_step,
                                             eval_mode=True)
                 time_step = self.eval_env.step(action)
@@ -146,10 +145,10 @@ class Workspace:
         episode_step, episode_reward = 0, 0
         time_step = self.train_env.reset()
         self.replay_storage.add(time_step)
-        self.train_video_recorder.init(time_step.observation)
+        self.train_video_recorder.init(time_step['rgb'])
         metrics = None
         while train_until_step(self.global_step):
-            if time_step.last():
+            if time_step['islast']:
                 self._global_episode += 1
                 self.train_video_recorder.save(f'{self.global_frame}.mp4')
                 # wait until all the metrics schema is populated
@@ -170,7 +169,7 @@ class Workspace:
                 # reset env
                 time_step = self.train_env.reset()
                 self.replay_storage.add(time_step)
-                self.train_video_recorder.init(time_step.observation)
+                self.train_video_recorder.init(time_step['rgb'])
                 # try to save snapshot
                 if self.cfg.save_snapshot:
                     self.save_snapshot()
@@ -181,11 +180,11 @@ class Workspace:
             if eval_every_step(self.global_step):
                 self.logger.log('eval_total_time', self.timer.total_time(),
                                 self.global_frame)
-                self.eval()
+                # self.eval()
 
             # sample action
             with torch.no_grad(), utils.eval_mode(self.agent):
-                action = self.agent.act(time_step.observation,
+                action = self.agent.act(time_step['rgb'],
                                         self.global_step,
                                         eval_mode=False)
 

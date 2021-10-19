@@ -45,7 +45,13 @@ class ReplayBufferStorage:
     def __len__(self):
         return self._num_transitions
 
+
     def add(self, time_step):
+        #observation (9, 84, 84) uint8
+        #action (12,) float32
+        #reward (1,) float32
+        #discount (1,) float32
+
         for spec in self._data_specs:
             value = time_step[spec.name]
             if np.isscalar(value):
@@ -53,7 +59,7 @@ class ReplayBufferStorage:
             if not (spec.shape == value.shape and spec.dtype == value.dtype):
                 import pdb; pdb.set_trace()
             self._current_episode[spec.name].append(value)
-        if time_step.last():
+        if time_step['islast']:
             episode = dict()
             for spec in self._data_specs:
                 value = self._current_episode[spec.name]
@@ -149,9 +155,9 @@ class ReplayBuffer(IterableDataset):
         episode = self._sample_episode()
         # add +1 for the first dummy transition
         idx = np.random.randint(0, episode_len(episode) - self._nstep + 1) + 1
-        obs = episode['observation'][idx - 1]
+        obs = episode['rgb'][idx - 1]
         action = episode['action'][idx]
-        next_obs = episode['observation'][idx + self._nstep - 1]
+        next_obs = episode['rgb'][idx + self._nstep - 1]
         reward = np.zeros_like(episode['reward'][idx])
         discount = np.ones_like(episode['discount'][idx])
         for i in range(self._nstep):
