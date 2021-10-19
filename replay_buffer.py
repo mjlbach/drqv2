@@ -47,11 +47,11 @@ class ReplayBufferStorage:
 
     def add(self, time_step):
         for spec in self._data_specs:
-            import pdb; pdb.set_trace()
             value = time_step[spec.name]
             if np.isscalar(value):
                 value = np.full(spec.shape, value, spec.dtype)
-            assert spec.shape == value.shape and spec.dtype == value.dtype
+            if not (spec.shape == value.shape and spec.dtype == value.dtype):
+                import pdb; pdb.set_trace()
             self._current_episode[spec.name].append(value)
         if time_step.last():
             episode = dict()

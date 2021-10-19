@@ -47,7 +47,7 @@ class Workspace:
         self.setup()
 
         self.agent = make_agent(
-            DataSpec(self.train_env.observation_space['rgb'].shape, np.float32, 'rgb'),
+            DataSpec(self.train_env.observation_space['rgb'].shape, np.uint8, 'rgb'),
             DataSpec(self.train_env.action_space.shape, np.float32, 'action'),
             self.cfg.agent)
         self.timer = utils.Timer()
@@ -69,8 +69,8 @@ class Workspace:
         # create replay buffer
 
         data_specs = (
-            DataSpec(self.train_env.observation_space['rgb'].shape, np.float32, 'rgb'),
-            DataSpec(self.train_env.observation_space.shape, np.float32, 'action'),
+            DataSpec(self.train_env.observation_space['rgb'].shape, np.uint8, 'rgb'),
+            DataSpec(self.train_env.action_space.shape, np.float32, 'action'),
             DataSpec([1], np.float32, 'reward'),
             DataSpec([1], np.float32, 'discount'),
         )
