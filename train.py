@@ -59,7 +59,7 @@ class Workspace:
         self.logger = Logger(self.work_dir, use_tb=self.cfg.use_tb)
         # create envs
         env_config = "/home/michael/Repositories/drqv2/behavior_full_observability.yaml"
-        self.train_env =BehaviorRewardShapingEnv(env_config)
+        self.train_env =BehaviorRewardShapingEnv(env_config, action_filter="mobile_manipulation")
         # self.eval_env =BehaviorRewardShapingEnv(env_config)
         # self.train_env = dmc.make(self.cfg.task_name, self.cfg.frame_stack,
         #                           self.cfg.action_repeat, self.cfg.seed)
@@ -195,9 +195,9 @@ class Workspace:
 
             # take env step
             time_step = self.train_env.step(action)
-            episode_reward += time_step.reward
+            episode_reward += time_step['reward']
             self.replay_storage.add(time_step)
-            self.train_video_recorder.record(time_step.observation)
+            self.train_video_recorder.record(time_step['rgb'])
             episode_step += 1
             self._global_step += 1
 

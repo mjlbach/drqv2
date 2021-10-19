@@ -52,7 +52,13 @@ class ReplayBufferStorage:
         #reward (1,) float32
         #discount (1,) float32
 
+        # rgb (84, 84, 3) <class 'numpy.uint8'>
+        # action (17,) <class 'numpy.float32'>
+        # reward (1,) <class 'numpy.float32'>
+        # discount (1,) <class 'numpy.float32'>
+
         for spec in self._data_specs:
+            print(spec.name, spec.shape, spec.dtype)
             value = time_step[spec.name]
             if np.isscalar(value):
                 value = np.full(spec.shape, value, spec.dtype)

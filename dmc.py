@@ -89,6 +89,7 @@ class FrameStackWrapper(dm_env.Environment):
         return time_step._replace(observation=obs)
 
     def _extract_pixels(self, time_step):
+        import pdb; pdb.set_trace()
         pixels = time_step.observation[self._pixels_key]
         # remove batch dim
         if len(pixels.shape) == 4:
