@@ -54,7 +54,6 @@ class Workspace:
         # create envs
         self.train_env = ig_adapter.make(self.cfg.task_name, self.cfg.frame_stack,
                                          self.cfg.action_repeat, self.cfg.seed)
-        import pdb; pdb.set_trace()
         # self.eval_env = ig_adapter.make(self.cfg.task_name, self.cfg.frame_stack,
         #                                 self.cfg.action_repeat, self.cfg.seed)
         # create replay buffer
@@ -207,7 +206,7 @@ class Workspace:
 
 @hydra.main(config_path='cfgs', config_name='config')
 def main(cfg):
-    from train import Workspace as W
+    from train_igibson import Workspace as W
     root_dir = Path.cwd()
     workspace = W(cfg)
     snapshot = root_dir / 'snapshot.pt'

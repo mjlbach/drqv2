@@ -251,8 +251,9 @@ class ExtendedTimeStepWrapper:
 
 def make(name, frame_stack, action_repeat, seed, config=None):
     # make sure reward is not visualized
-    config=os.path.join("search.yml")
-    env = iGibsonEnv(config_file=config)
+    config="/home/michael/Repositories/lab/drqv2/search.yml"
+    import pdb; pdb.set_trace()
+    env = iGibsonEnv(config_file=config, mode="gui_non_interactive")
     # add wrappers
     env = TimeStepWrapper(env)
     env = ActionDTypeWrapper(env, np.float32)
