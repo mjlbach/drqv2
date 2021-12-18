@@ -174,12 +174,13 @@ class FrameStackWrapper:
         # remove batch dim
         if len(pixels_shape) == 4:
             pixels_shape = pixels_shape[1:]
-        # self._obs_spec = specs.BoundedArray(shape=np.concatenate(
-        #     [[pixels_shape[2] * num_frames], pixels_shape[:2]], axis=0),
-        #                                     dtype=np.uint8,
-        #                                     minimum=0,
-        #                                     maximum=255,
-        #                                     name='observation')
+
+        self._obs_spec = gym.spaces.Box(
+            low=0,
+            high=255,
+            dtype=np.uint8,
+            shape=np.concatenate([[pixels_shape[2] * num_frames], pixels_shape[:2]], axis=0),
+        )
 
     def _transform_observation(self, time_step):
         assert len(self._frames) == self._num_frames
@@ -252,7 +253,6 @@ class ExtendedTimeStepWrapper:
 def make(name, frame_stack, action_repeat, seed, config=None):
     # make sure reward is not visualized
     config="/home/michael/Repositories/lab/drqv2/search.yml"
-    import pdb; pdb.set_trace()
     env = iGibsonEnv(config_file=config, mode="gui_non_interactive")
     # add wrappers
     env = TimeStepWrapper(env)
