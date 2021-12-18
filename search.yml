@@ -1,0 +1,43 @@
+# scene
+scene: igibson
+scene_id: Rs_int
+urdf_file: Rs_int
+
+clutter: false
+build_graph: true
+load_texture: true
+pybullet_load_texture: false
+should_open_all_doors: false
+
+# domain randomization
+texture_randomization_freq: null
+object_randomization_freq: null
+
+# robot
+robot: Fetch
+
+# task
+load_object_categories: [ agent, hardback, notebook, floor, shelf, breakfast_table ] 
+
+# discount factor
+discount_factor: 0.99
+
+# termination condition
+max_step: 2000
+
+# sensor spec
+output: [rgb, depth]
+
+# image
+fisheye: false
+image_width: 256
+image_height: 256
+vertical_fov: 120
+
+# depth
+depth_low: 0.0
+depth_high: 10.0
+
+# sensor noise
+depth_noise_rate: 0.0
+scan_noise_rate: 0.0
