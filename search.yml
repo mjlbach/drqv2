@@ -17,13 +17,14 @@ object_randomization_freq: null
 robot: Fetch
 
 # task
-load_object_categories: [ agent, hardback, notebook, floor, shelf, breakfast_table ] 
+# load_object_categories: [ agent, hardback, notebook, floor, shelf, breakfast_table ] 
+load_object_categories: [agent]
 
 # discount factor
 discount_factor: 0.99
 
 # termination condition
-max_step: 2000
+max_step: 1000
 
 # sensor spec
 output: [rgb, depth]

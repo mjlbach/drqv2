@@ -2,7 +2,7 @@ name: drqv2
 channels:
   - pytorch
   - nvidia
-  - defaults
+  - conda-forge
 dependencies:
   - python=3.8
   - pip

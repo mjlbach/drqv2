@@ -4,15 +4,13 @@
 # LICENSE file in the root directory of this source tree.
 from collections import deque
 from typing import Any, NamedTuple
-import igibson
-from igibson.envs.igibson_env import iGibsonEnv
+from ssg.envs.igibson_env import iGibsonEnv
 
 import enum
-import os
 import numpy as np
 import gym
 import gym.spaces
-# from dm_env import specs
+from specs import Array
 
 class StepType(enum.IntEnum):
   """Defines the status of a `TimeStep` within a sequence."""
@@ -88,10 +86,12 @@ class TimeStepWrapper:
 
 
     def observation_spec(self):
-        return self._env.observation_space
+        obs_spec = self._env.observation_space
+        return obs_spec
 
     def action_spec(self):
-        return self._env.action_space
+        act_spec = self._env.action_space
+        return act_spec
 
     def reset(self):
         state = self._env.reset()
@@ -184,7 +184,7 @@ class FrameStackWrapper:
 
     def _transform_observation(self, time_step):
         assert len(self._frames) == self._num_frames
-        obs = np.concatenate(list(self._frames), axis=0)
+        obs = np.concatenate(list(self._frames), axis=0).astype(np.uint8)
         return time_step._replace(observation=obs)
 
     def _extract_pixels(self, time_step):
@@ -249,11 +249,31 @@ class ExtendedTimeStepWrapper:
     def __getattr__(self, name):
         return getattr(self._env, name)
 
+class ObservationSpecWrapper:
+    def __init__(self, env):
+        self._env = env
+
+    def step(self, action):
+        return self._env.step(action)
+
+    def observation_spec(self):
+        obs_spec = self._env.observation_spec()
+        return Array(shape=obs_spec.shape, dtype=obs_spec.dtype, name='observation')
+
+    def action_spec(self):
+        act_spec = self._env.action_spec()
+        return Array(shape=act_spec.shape, dtype=act_spec.dtype, name='action')
+
+    def reset(self):
+        return self._env.reset()
+
+    def __getattr__(self, name):
+        return getattr(self._env, name)
 
 def make(name, frame_stack, action_repeat, seed, config=None):
     # make sure reward is not visualized
     config="/home/michael/Repositories/lab/drqv2/search.yml"
-    env = iGibsonEnv(config_file=config, mode="gui_non_interactive")
+    env = iGibsonEnv(config_file=config)
     # add wrappers
     env = TimeStepWrapper(env)
     env = ActionDTypeWrapper(env, np.float32)
@@ -263,6 +283,7 @@ def make(name, frame_stack, action_repeat, seed, config=None):
     # stack several frames
     env = FrameStackWrapper(env, frame_stack, 'rgb')
     env = ExtendedTimeStepWrapper(env)
+    env = ObservationSpecWrapper(env)
     return env
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ from pathlib import Path
 import hydra
 import numpy as np
 import torch
-from dm_env import specs
+import specs
 
 import ig_adapter
 import utils
@@ -26,9 +26,8 @@ torch.backends.cudnn.benchmark = True
 
 
 def make_agent(obs_spec, action_spec, cfg):
-    import pdb; pdb.set_trace()
-    cfg.obs_shape = list(map(int, obs_spec.shape))
-    cfg.action_shape = list(map(int, action_spec.shape))
+    cfg.obs_shape = obs_spec.shape
+    cfg.action_shape = action_spec.shape
     return hydra.utils.instantiate(cfg)
 
 
@@ -96,31 +95,31 @@ class Workspace:
             self._replay_iter = iter(self.replay_loader)
         return self._replay_iter
 
-    def eval(self):
-        step, episode, total_reward = 0, 0, 0
-        eval_until_episode = utils.Until(self.cfg.num_eval_episodes)
+    # def eval(self):
+    #     step, episode, total_reward = 0, 0, 0
+    #     eval_until_episode = utils.Until(self.cfg.num_eval_episodes)
 
-        while eval_until_episode(episode):
-            time_step = self.eval_env.reset()
-            self.video_recorder.init(self.eval_env, enabled=(episode == 0))
-            while not time_step.last():
-                with torch.no_grad(), utils.eval_mode(self.agent):
-                    action = self.agent.act(time_step.observation,
-                                            self.global_step,
-                                            eval_mode=True)
-                time_step = self.eval_env.step(action)
-                self.video_recorder.record(self.eval_env)
-                total_reward += time_step.reward
-                step += 1
+    #     while eval_until_episode(episode):
+    #         time_step = self.eval_env.reset()
+    #         self.video_recorder.init(self.eval_env, enabled=(episode == 0))
+    #         while not time_step.last():
+    #             with torch.no_grad(), utils.eval_mode(self.agent):
+    #                 action = self.agent.act(time_step.observation,
+    #                                         self.global_step,
+    #                                         eval_mode=True)
+    #             time_step = self.eval_env.step(action)
+    #             self.video_recorder.record(self.eval_env)
+    #             total_reward += time_step.reward
+    #             step += 1
 
-            episode += 1
-            self.video_recorder.save(f'{self.global_frame}.mp4')
+    #         episode += 1
+    #         self.video_recorder.save(f'{self.global_frame}.mp4')
 
-        with self.logger.log_and_dump_ctx(self.global_frame, ty='eval') as log:
-            log('episode_reward', total_reward / episode)
-            log('episode_length', step * self.cfg.action_repeat / episode)
-            log('episode', self.global_episode)
-            log('step', self.global_step)
+#         with self.logger.log_and_dump_ctx(self.global_frame, ty='eval') as log:
+#             log('episode_reward', total_reward / episode)
+#             log('episode_length', step * self.cfg.action_repeat / episode)
+#             log('episode', self.global_episode)
+#             log('step', self.global_step)
 
     def train(self):
         # predicates
